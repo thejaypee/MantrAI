@@ -1,0 +1,30 @@
+wing: mantrai_v2
+rooms:
+- name: mantrai
+  description: Files from mantrai/
+  keywords:
+  - mantrai
+  - mantrai
+- name: testing
+  description: Files from tests/
+  keywords:
+  - testing
+  - tests
+- name: scripts
+  description: Files from scripts/
+  keywords:
+  - scripts
+  - scripts
+- name: configuration
+  description: Files from config/
+  keywords:
+  - configuration
+  - config
+- name: mantras
+  description: Files from mantras/
+  keywords:
+  - mantras
+  - mantras
+- name: general
+  description: Files that don't fit other rooms
+  keywords: []

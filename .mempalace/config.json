@@ -1,0 +1,34 @@
+{
+  "palace_path": "/home/sauly/mantrai-v2/.mempalace/palace",
+  "collection_name": "mempalace_drawers",
+  "topic_wings": [
+    "technical",
+    "identity",
+    "creative"
+  ],
+  "hall_keywords": {
+    "technical": [
+      "code",
+      "python",
+      "mcp",
+      "server",
+      "cli",
+      "test",
+      "pytest"
+    ],
+    "identity": [
+      "mantra",
+      "principle",
+      "policy",
+      "agent",
+      "instruction"
+    ],
+    "creative": [
+      "design",
+      "product",
+      "global",
+      "brand",
+      "mantrai"
+    ]
+  }
+}
