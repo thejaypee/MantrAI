@@ -22,7 +22,7 @@ class TestLoadDefaultMantra:
         assert isinstance(mantra, Mantra)
         assert len(mantra.principles) >= 7
         assert mantra.header == DEFAULT_HEADER
-        assert mantra.level == "normal"
+        assert mantra.level == "strict"
 
     def test_load_default_from_path(self):
         mantra = load_mantra()

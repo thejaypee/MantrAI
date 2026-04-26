@@ -13,6 +13,7 @@ DEFAULT_CONFIG = {
     "normal_threshold": 5,
     "compliance_window_minutes": 5,
     "mempalace_enabled": False,
+    "contextual_mode": True,
 }
 
 

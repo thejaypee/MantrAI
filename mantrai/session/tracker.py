@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -18,6 +19,18 @@ CREATE TABLE IF NOT EXISTS confirmations (
     acknowledged INTEGER NOT NULL DEFAULT 1
 );
 CREATE INDEX IF NOT EXISTS idx_session ON confirmations(session_id, timestamp);
+
+CREATE TABLE IF NOT EXISTS injection_audit (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    prompt_preview TEXT,
+    total_principles INTEGER NOT NULL,
+    selected_count INTEGER NOT NULL,
+    matched_keywords TEXT,
+    fallback INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_audit_session ON injection_audit(session_id, timestamp);
 """
 
 
@@ -95,6 +108,45 @@ class SessionTracker:
             "first": datetime.fromisoformat(row["first"]) if row and row["first"] else None,
             "last": datetime.fromisoformat(row["last"]) if row and row["last"] else None,
         }
+
+    def log_injection_audit(self, session_id: str, audit: dict) -> None:
+        ts = datetime.now(timezone.utc).isoformat()
+        with sqlite3.connect(str(self.db_path)) as conn:
+            conn.execute(
+                """INSERT INTO injection_audit
+                (session_id, timestamp, prompt_preview, total_principles, selected_count, matched_keywords, fallback)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    session_id,
+                    ts,
+                    audit.get("prompt_preview", ""),
+                    audit.get("total_principles", 0),
+                    audit.get("selected_count", 0),
+                    json.dumps(audit.get("matched_keywords", {})),
+                    1 if audit.get("fallback") else 0,
+                ),
+            )
+            conn.commit()
+
+    def audit_log(self, session_id: str, limit: int = 20) -> list[dict]:
+        with sqlite3.connect(str(self.db_path)) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                "SELECT * FROM injection_audit WHERE session_id = ? ORDER BY timestamp DESC LIMIT ?",
+                (session_id, limit),
+            ).fetchall()
+        return [
+            {
+                "session_id": r["session_id"],
+                "timestamp": datetime.fromisoformat(r["timestamp"]),
+                "prompt_preview": r["prompt_preview"],
+                "total_principles": r["total_principles"],
+                "selected_count": r["selected_count"],
+                "matched_keywords": json.loads(r["matched_keywords"]) if r["matched_keywords"] else {},
+                "fallback": bool(r["fallback"]),
+            }
+            for r in rows
+        ]
 
     def compliance_log(self, session_id: str, limit: int = 20) -> List[Confirmation]:
         with sqlite3.connect(str(self.db_path)) as conn:

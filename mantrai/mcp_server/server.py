@@ -7,8 +7,8 @@ from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
-from mantrai.antifunnel.gate import ActionGate
-from mantrai.antifunnel.session import SessionTracker
+from mantrai.session.gate import ActionGate
+from mantrai.session.tracker import SessionTracker
 from mantrai.core.config import load_config
 from mantrai.core.mantra import load_mantra, validate_mantra
 from mantrai.core.schema import Mantra

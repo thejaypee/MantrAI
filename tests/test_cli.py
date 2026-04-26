@@ -61,3 +61,16 @@ class TestCli:
         result = runner.invoke(cli, ["log", "--session-id", "cli-test-3", "--limit", "5"])
         assert result.exit_code == 0
         assert "Compliance log for cli-test-3" in result.output
+
+    def test_cli_init_interactive(self):
+        runner = CliRunner()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Simulate interactive input: normal level, add principle, done
+            inputs = "\n".join(["", "a", "INTERACTIVE TEST PRINCIPLE.", "d"]) + "\n"
+            result = runner.invoke(cli, ["init", "--interactive", "--dir", tmpdir], input=inputs)
+            assert result.exit_code == 0
+            dest = Path(tmpdir) / ".mantrai.md"
+            assert dest.exists()
+            content = dest.read_text()
+            assert "Agent Mantra" in content
+            assert "INTERACTIVE TEST PRINCIPLE" in content

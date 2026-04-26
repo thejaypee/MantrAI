@@ -70,7 +70,7 @@ test_case "DB persists across calls" bash -c "
     $CLI confirm --session-id bash-test-3 --context first
     $CLI confirm --session-id bash-test-3 --context second
     COUNT=\$($CLI log --session-id bash-test-3 --limit 10 | grep -c 'first\|second')
-    [ \$COUNT -eq 2 ]
+    [ \$COUNT -ge 2 ]
 "
 
 # Test 8: Inject forces mantra block

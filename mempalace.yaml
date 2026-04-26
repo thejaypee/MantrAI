@@ -1,30 +1,47 @@
-wing: mantrai_v2
+wing: mantrai
 rooms:
-- name: mantrai
-  description: Files from mantrai/
+- name: core
+  description: Core mantra logic and schema
   keywords:
-  - mantrai
-  - mantrai
-- name: testing
-  description: Files from tests/
+  - core
+  - schema
+  - mantra
+- name: session
+  description: Session tracking and gate enforcement
   keywords:
-  - testing
-  - tests
-- name: scripts
-  description: Files from scripts/
+  - session
+  - gate
+  - tracker
+- name: mcp_server
+  description: FastMCP server tools
   keywords:
-  - scripts
-  - scripts
-- name: configuration
-  description: Files from config/
+  - mcp
+  - server
+  - tools
+- name: cli
+  description: CLI commands and hooks
   keywords:
-  - configuration
-  - config
+  - cli
+  - commands
+  - hook
 - name: mantras
-  description: Files from mantras/
+  description: Mantra definitions and rules
   keywords:
   - mantras
-  - mantras
+  - default
+  - principles
+- name: tests
+  description: Test suite
+  keywords:
+  - tests
+  - pytest
+  - integration
+- name: configuration
+  description: Config and settings
+  keywords:
+  - config
+  - settings
+  - json
 - name: general
   description: Files that don't fit other rooms
   keywords: []

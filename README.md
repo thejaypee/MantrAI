@@ -2,29 +2,68 @@
 
 Self-reinforcing agent instruction primitive. Repeated mantra injection for continuous compliance.
 
-## Install
-
-```bash
-pip install mantrai
-# or
-uv tool install mantrai
-```
-
 ## What Is This?
 
 MantrAI ensures agents continuously re-read and acknowledge standing principles throughout a session — not just once at startup. It provides:
 
+- **Categorized Mantras** — Global, Project, and Folder-level principles
 - **MCP Server** — 7 tools Claude can call to check, confirm, and inject mantras
+- **Checkbox Editor** — Interactive TUI (`--global`, `--project`, `--folder`) for quick setup
+- **Web GUI** — Browser-based editor with three tabs
 - **Session Logger** — SQLite-backed audit trail of every acknowledgment
 - **MemPalace Bridge** — Pulls mantras from MemPalace when available
 - **Standalone CLI** — Works without Claude (`mantrai read`, `mantrai confirm`, etc.)
+- **Prompt Hook** — Injects mantra before every prompt via `user-prompt-submit-hook`
+
+## Install
+
+```bash
+# From the project directory
+uv pip install -e .
+
+# Or with pip
+pip install -e .
+```
+
+The `mantrai` binary is installed into your virtual environment:
+```bash
+/home/sauly/mantrai/.venv/bin/mantrai --help
+
+# Or activate the venv first
+source /home/sauly/mantrai/.venv/bin/activate
+mantrai --help
+```
 
 ## Quick Start
 
 ```bash
-mantrai read              # Print default mantra
+mantrai read              # Print current mantra with categories
 mantrai serve             # Start MCP server
+mantrai gui               # Start web GUI on localhost:8765
+mantrai --global          # Edit global principles (checkbox TUI)
+mantrai --project         # Edit project-level principles
+mantrai --folder          # Edit folder-level principles
+mantrai                   # Initialize folder-level mantra in current directory
 ```
+
+## Three-Level Mantra Hierarchy
+
+MantrAI resolves mantras in this order:
+
+1. **Folder level** — `.mantrai.md` in current directory
+2. **Project level** — `.mantrai.md` in project root (nearest `.git` or `pyproject.toml`)
+3. **Global level** — `~/.mantrai/mantra.md`
+4. **Bundled default** — Package default (categorized)
+
+This means you can set global rules, override them per project, and override again per folder.
+
+## Categories
+
+Each mantra is divided into three categories:
+
+- **Global** — Universal agent behavior: no simulations, no lying, read before write, security, etc.
+- **Project** — Workflow rules: plan first, /init, checklist, build mode, demo, wait for confirmation
+- **Folder** — Cross-repo integration: treat repos as modules, follow upstream docs, adapters, mempalace
 
 ## MCP Tools
 
@@ -49,7 +88,13 @@ mantrai log --session-id ID           # Show history
 mantrai validate <file.md>            # Validate custom mantra
 mantrai serve                         # Start MCP server (stdio)
 mantrai init --dir /path/to/project   # Install mantra into project
-mantrai init --paste --dir .           # Paste mantra from stdin
+mantrai init --paste --dir .          # Paste mantra from stdin
+mantrai init --interactive --dir .    # Guided mantra creation
+mantrai gui                           # Start web GUI
+mantrai --global                      # Edit global mantra (TUI)
+mantrai --project                     # Edit project mantra (TUI)
+mantrai --folder                      # Edit folder mantra (TUI)
+mantrai                               # Initialize folder mantra in cwd
 ```
 
 ## Levels
@@ -65,8 +110,14 @@ Create a file with your principles:
 ```markdown
 ## Agent Mantra — Follow This At All Times
 
-> **ALWAYS WRITE TESTS FIRST.**
-> **NEVER SKIP CODE REVIEW.**
+### Global
+> **ABSOLUTELY NO SIMULATIONS**
+
+### Project
+> **Plan first**
+
+### Folder
+> **Treat repositories as modules**
 
 ---
 ```
@@ -82,6 +133,18 @@ Or paste directly:
 
 ```bash
 mantrai init --paste --dir .
+```
+
+Or use the interactive checkbox editor:
+
+```bash
+mantrai --global
+```
+
+Or the web GUI:
+
+```bash
+mantrai gui
 ```
 
 ## MemPalace Integration

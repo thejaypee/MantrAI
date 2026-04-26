@@ -20,8 +20,8 @@ from mantrai.mcp_server.server import (
 class TestMcpTools:
     def test_mantrai_read(self):
         result = mantrai_read()
-        assert "Level: normal" in result
-        assert "MAKE NO MISTAKES" in result
+        assert "Level: strict" in result
+        assert "ABSOLUTELY NO SIMULATIONS" in result
 
     def test_mantrai_confirm(self):
         result = mantrai_confirm("test-session-1", action_context="test_ack")
@@ -33,7 +33,7 @@ class TestMcpTools:
         mantrai_confirm("test-session-2", action_context="setup")
         result = mantrai_check("test-session-2")
         assert "Session: test-session-2" in result
-        assert "Level: normal" in result
+        assert "Level: strict" in result
 
     def test_mantrai_inject(self):
         result = mantrai_inject("test-session-3")

@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from mantrai.antifunnel.gate import ActionGate
-from mantrai.antifunnel.injector import MantraInjector
-from mantrai.antifunnel.session import SessionTracker
+from mantrai.session.gate import ActionGate
+from mantrai.session.injector import MantraInjector
+from mantrai.session.tracker import SessionTracker
 from mantrai.core.mantra import get_default_mantra
 from mantrai.core.schema import Mantra, Principle
 

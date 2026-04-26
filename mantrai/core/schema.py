@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 class Principle(BaseModel):
     text: str = Field(..., min_length=1, description="A single mantra principle")
+    category: Optional[Literal["global", "project", "folder"]] = None
 
 
 class Mantra(BaseModel):
@@ -20,11 +21,23 @@ class Mantra(BaseModel):
 
     def render(self) -> str:
         lines = [self.header, ""]
-        for p in self.principles:
-            lines.append(f"> **{p.text}**")
+        has_categories = any(p.category for p in self.principles)
+        if has_categories:
+            for cat in ("global", "project", "folder"):
+                cat_principles = [p for p in self.principles if p.category == cat]
+                if cat_principles:
+                    lines.append(f"### {cat.capitalize()}")
+                    lines.append("")
+                    for p in cat_principles:
+                        lines.append(f"> **{p.text}**")
+                    lines.append("")
+        else:
+            for p in self.principles:
+                lines.append(f"> **{p.text}**")
+            lines.append("")
         if self.level != "off":
             lines.append(f"> **MANTRA_LEVEL={self.level}.**")
-        lines.append("")
+            lines.append("")
         lines.append(self.separator)
         return "\n".join(lines)
 
@@ -42,9 +55,20 @@ class Mantra(BaseModel):
             lines.append("")
         lines.append(self.header)
         lines.append("")
-        for p in self.principles:
-            lines.append(f"> **{p.text}**")
-        lines.append("")
+        has_categories = any(p.category for p in self.principles)
+        if has_categories:
+            for cat in ("global", "project", "folder"):
+                cat_principles = [p for p in self.principles if p.category == cat]
+                if cat_principles:
+                    lines.append(f"### {cat.capitalize()}")
+                    lines.append("")
+                    for p in cat_principles:
+                        lines.append(f"> **{p.text}**")
+                    lines.append("")
+        else:
+            for p in self.principles:
+                lines.append(f"> **{p.text}**")
+            lines.append("")
         lines.append(self.separator)
         return "\n".join(lines)
 

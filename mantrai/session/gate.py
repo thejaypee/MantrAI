@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 from mantrai.core.schema import GateResult, Mantra
-from mantrai.antifunnel.session import SessionTracker
+from mantrai.session.tracker import SessionTracker
 
 
 class ActionGate:
