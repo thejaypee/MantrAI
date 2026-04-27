@@ -329,21 +329,25 @@ def _edit_category(category: str, target_path: Path) -> None:
     defaults = get_default_mantra()
     default_principles = [p for p in defaults.principles if p.category == category]
 
-    # Load existing file to see what's already selected
-    existing_texts: set[str] = set()
+    # Load existing principles for this category so they aren't lost
+    existing_for_cat: list = []
     if target_path.exists():
         try:
             existing = load_mantra(target_path)
-            existing_texts = {p.text for p in existing.principles if p.category == category}
+            existing_for_cat = [p for p in existing.principles if p.category == category]
         except Exception:
             pass
 
-    # Always pre-check defaults so user sees them selected; they can spacebar to remove
-    choices = [
-        questionary.Choice(title=p.text, checked=True)
-        for p in default_principles
-    ]
-    # Add option to create custom principles
+    # Build choices: defaults always checked, plus existing non-defaults checked
+    seen: set[str] = set()
+    choices: list = []
+    for p in default_principles:
+        seen.add(p.text)
+        choices.append(questionary.Choice(title=p.text, checked=True))
+    for p in existing_for_cat:
+        if p.text not in seen:
+            seen.add(p.text)
+            choices.append(questionary.Choice(title=p.text, checked=True))
     choices.append(questionary.Choice(title="[Add custom principle...]", checked=False))
 
     click.echo(f"=== {category.capitalize()} Mantra — Space to toggle, Enter to save ===")
@@ -358,17 +362,14 @@ def _edit_category(category: str, target_path: Path) -> None:
 
     custom_principles: list[str] = []
     if "[Add custom principle...]" in selected:
-        # Prompt for custom principles
         while True:
             text = questionary.text("Enter custom principle (empty to finish):").ask()
             if not text or not text.strip():
                 break
             custom_principles.append(text.strip())
-        # Remove the placeholder from selected
         selected = [s for s in selected if s != "[Add custom principle...]"]
 
-    # Build new mantra content
-    # Preserve other categories from existing file
+    # Rebuild mantra preserving other categories exactly as they are
     all_principles: list = []
     if target_path.exists():
         try:
@@ -403,6 +404,8 @@ def _edit_category(category: str, target_path: Path) -> None:
 
 def _interactive_init(dest: Path) -> None:
     """Guide the user through creating a custom folder mantra."""
+    from mantrai.core.schema import Mantra, Principle
+
     click.echo("")
     click.echo("=== MantrAI Interactive Setup ===")
     click.echo("")
@@ -459,18 +462,11 @@ def _interactive_init(dest: Path) -> None:
         click.echo("ERROR: At least one principle required.")
         sys.exit(1)
 
-    # Build markdown
-    lines = [
-        f"**Level:** `{level}`",
-        "",
-        "## Agent Mantra — Follow This At All Times",
-        "",
-    ]
-    for p in principles:
-        lines.append(f"> **{p}**")
-    lines.append("")
-    lines.append("---")
-    content = "\n".join(lines)
+    mantra = Mantra(
+        level=level,
+        principles=[Principle(text=p) for p in principles],
+    )
+    content = mantra.to_markdown()
 
     valid, errors = validate_mantra(content)
     if not valid:
