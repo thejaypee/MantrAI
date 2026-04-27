@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from typing import Optional
 
 from mantrai.core.mantra import get_default_mantra
@@ -17,7 +18,7 @@ def search_mempalace_cli() -> Optional[str]:
     try:
         result = subprocess.run(
             [
-                "python3",
+                sys.executable,
                 "-m",
                 "mempalace.cli",
                 "search",
