@@ -207,54 +207,58 @@ def hook(session_id):
         )
         return
 
-    cfg = load_config()
-    tracker = SessionTracker(db_path=get_db_path(cfg))
-    mantra = load_mantra()
-    gate = ActionGate(tracker, mantra)
-    result = gate.before_action("prompt", session_id)
+    try:
+        cfg = load_config()
+        tracker = SessionTracker(db_path=get_db_path(cfg))
+        mantra = load_mantra()
+        gate = ActionGate(tracker, mantra)
+        result = gate.before_action("prompt", session_id)
 
-    if result.require_reinjection:
-        from mantrai.core.detector import coordinate_injection, get_injection_strategy
-        from mantrai.core.selector import get_selection_audit, render_contextual_block, select_principles
+        if result.require_reinjection:
+            from mantrai.core.detector import coordinate_injection, get_injection_strategy
+            from mantrai.core.selector import get_selection_audit, render_contextual_block, select_principles
 
-        # Contextual mode: select only principles relevant to the prompt
-        if cfg.get("contextual_mode", True):
-            selected = select_principles(prompt_text, mantra.principles)
-            mantra_block = render_contextual_block(
-                selected,
-                level=mantra.level,
+            # Contextual mode: select only principles relevant to the prompt
+            if cfg.get("contextual_mode", True):
+                selected = select_principles(prompt_text, mantra.principles)
+                mantra_block = render_contextual_block(
+                    selected,
+                    level=mantra.level,
+                )
+                audit = get_selection_audit(prompt_text, mantra.principles, selected)
+                tracker.log_injection_audit(session_id, audit)
+            else:
+                mantra_block = result.mantra_block
+
+            # Determine strategy: piggyback on MemPalace or direct injection
+            # Pass prompt_text to detect [MEM] markers in stdin
+            strategy = get_injection_strategy(cfg, prompt_text)
+            existing = prompt_text if strategy == "piggyback" else None
+
+            # Coordinate injection
+            combined = coordinate_injection(
+                mantra_block=mantra_block,
+                strategy=strategy,
+                existing_injection=existing,
             )
-            audit = get_selection_audit(prompt_text, mantra.principles, selected)
-            tracker.log_injection_audit(session_id, audit)
+            
+            # Reset counter and log
+            gate.reset_counter()
+            tracker.log_confirmation(
+                session_id=session_id,
+                agent_id="hook",
+                action_context="injected",
+            )
+            
+            if strategy == "piggyback":
+                # Prepend marker for MemPalace to position
+                click.echo("[MANTRAI_L05]" + combined, nl=False)
+            else:
+                click.echo(combined + "\n" + prompt_text, nl=False)
         else:
-            mantra_block = result.mantra_block
-
-        # Determine strategy: piggyback on MemPalace or direct injection
-        # Pass prompt_text to detect [MEM] markers in stdin
-        strategy = get_injection_strategy(cfg, prompt_text)
-        existing = prompt_text if strategy == "piggyback" else None
-
-        # Coordinate injection
-        combined = coordinate_injection(
-            mantra_block=mantra_block,
-            strategy=strategy,
-            existing_injection=existing,
-        )
-        
-        # Reset counter and log
-        gate.reset_counter()
-        tracker.log_confirmation(
-            session_id=session_id,
-            agent_id="hook",
-            action_context="injected",
-        )
-        
-        if strategy == "piggyback":
-            # Prepend marker for MemPalace to position
-            click.echo("[MANTRAI_L05]" + combined, nl=False)
-        else:
-            click.echo(combined + "\n" + prompt_text, nl=False)
-    else:
+            click.echo(prompt_text, nl=False)
+    except Exception as exc:
+        click.echo(f"[MANTRAI ERROR] {exc}", err=True)
         click.echo(prompt_text, nl=False)
 
 
@@ -320,7 +324,7 @@ def init(target_dir, mantra_path, paste, interactive):
 
 def _edit_category(category: str, target_path: Path) -> None:
     """Launch checkbox TUI to edit principles for a category in the target file."""
-    from mantrai.core.schema import Principle
+    from mantrai.core.schema import Mantra, Principle
 
     defaults = get_default_mantra()
     default_principles = [p for p in defaults.principles if p.category == category]

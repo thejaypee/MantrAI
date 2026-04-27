@@ -19,8 +19,9 @@ class Mantra(BaseModel):
     principles: List[Principle] = Field(default_factory=list, min_length=1)
     separator: str = "---"
 
-    def render(self) -> str:
-        lines = [self.header, ""]
+    def _render_principle_lines(self) -> list[str]:
+        """Return the rendered principle lines shared by render() and to_markdown()."""
+        lines: list[str] = []
         has_categories = any(p.category for p in self.principles)
         if has_categories:
             for cat in ("global", "project", "folder"):
@@ -35,6 +36,11 @@ class Mantra(BaseModel):
             for p in self.principles:
                 lines.append(f"> **{p.text}**")
             lines.append("")
+        return lines
+
+    def render(self) -> str:
+        lines = [self.header, ""]
+        lines.extend(self._render_principle_lines())
         if self.level != "off":
             lines.append(f"> **MANTRA_LEVEL={self.level}.**")
             lines.append("")
@@ -55,20 +61,7 @@ class Mantra(BaseModel):
             lines.append("")
         lines.append(self.header)
         lines.append("")
-        has_categories = any(p.category for p in self.principles)
-        if has_categories:
-            for cat in ("global", "project", "folder"):
-                cat_principles = [p for p in self.principles if p.category == cat]
-                if cat_principles:
-                    lines.append(f"### {cat.capitalize()}")
-                    lines.append("")
-                    for p in cat_principles:
-                        lines.append(f"> **{p.text}**")
-                    lines.append("")
-        else:
-            for p in self.principles:
-                lines.append(f"> **{p.text}**")
-            lines.append("")
+        lines.extend(self._render_principle_lines())
         lines.append(self.separator)
         return "\n".join(lines)
 
