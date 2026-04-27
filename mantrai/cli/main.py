@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import subprocess
 import sys
 import uuid
 from pathlib import Path
@@ -13,6 +12,11 @@ from mantrai.session.gate import ActionGate
 from mantrai.session.tracker import SessionTracker
 from mantrai.core.config import get_db_path, load_config
 from mantrai.core.mantra import get_default_mantra, load_mantra, validate_mantra
+from mantrai.core.agent_setup import (
+    get_detected_agents,
+    install_claude_code_hook,
+    install_cursor_mcp,
+)
 
 
 @click.group(invoke_without_command=True)
@@ -180,10 +184,12 @@ def validate(file_path):
 def hook(session_id):
     """Prompt injection hook. Reads prompt from stdin, prepends mantra if required.
 
-    This is the Claude Code user-prompt-submit-hook entrypoint.
-    Configure in .claude/settings.json:
+    Works with any agent that supports prompt hooks or stdin/stdout filters.
+    Example Claude Code configuration in .claude/settings.json:
 
     { "user-prompt-submit-hook": "mantrai hook" }
+
+    Or pipe manually: echo "prompt" | mantrai hook
     """
     prompt_text = sys.stdin.read()
     if not prompt_text.strip():
@@ -269,16 +275,58 @@ def serve():
     main()
 
 
+def _configure_agents(target: Path, yes: bool) -> None:
+    """Detect and configure supported agents."""
+    agents = get_detected_agents()
+
+    if not agents:
+        click.echo("No supported agents detected in PATH or current directory.")
+        click.echo("")
+        click.echo("To use MantrAI with any agent, pipe prompts through it:")
+        click.echo("  echo 'your prompt' | mantrai hook")
+        click.echo("Or run the MCP server: mantrai serve")
+        return
+
+    click.echo(f"Detected agents: {', '.join(agents)}")
+    click.echo("")
+
+    if "claude-code" in agents:
+        if yes or click.confirm("Install Claude Code hook?", default=True):
+            ok, msg = install_claude_code_hook(target)
+            click.echo(msg)
+
+    if "cursor" in agents:
+        if yes or click.confirm("Install Cursor MCP config?", default=True):
+            ok, msg = install_cursor_mcp(target)
+            click.echo(msg)
+
+    if "codex" in agents and "claude-code" not in agents:
+        click.echo("Codex detected. Add `mantrai hook` to your Codex wrapper script.")
+
+    click.echo("")
+    click.echo("Setup complete. Run `mantrai read` to verify your mantra.")
+
+
+@cli.command(name="setup")
+@click.option("--dir", "target_dir", default=".", help="Target directory for agent configs")
+@click.option("--yes", "-y", is_flag=True, help="Auto-confirm agent configuration")
+def setup_cmd(target_dir, yes):
+    """Auto-detect and configure MantrAI for supported agents."""
+    _configure_agents(Path(target_dir), yes)
+
+
 @cli.command()
 @click.option("--dir", "target_dir", default=".", help="Target directory to install mantra into")
 @click.option("--mantra", "mantra_path", help="Path to custom mantra file")
 @click.option("--paste", is_flag=True, help="Paste mantra content from stdin")
 @click.option("--interactive", "-i", is_flag=True, help="Guided interactive mantra creation")
-def init(target_dir, mantra_path, paste, interactive):
+@click.option("--setup", is_flag=True, help="Configure detected agents after installing mantra")
+def init(target_dir, mantra_path, paste, interactive, setup):
     """Install mantra into a project directory.
 
     With --paste, reads mantra content from stdin until EOF (Ctrl+D).
     With --interactive, guides you through customizing the default mantra.
+    With --setup, auto-configures detected agents after installation.
     """
     target = Path(target_dir)
     target.mkdir(parents=True, exist_ok=True)
@@ -320,6 +368,10 @@ def init(target_dir, mantra_path, paste, interactive):
     content = ref.read_text(encoding="utf-8")
     dest.write_text(content, encoding="utf-8")
     click.echo(f"Installed default mantra to {dest}")
+
+    if setup:
+        click.echo("")
+        _configure_agents(target, yes=False)
 
 
 def _edit_category(category: str, target_path: Path) -> None:
