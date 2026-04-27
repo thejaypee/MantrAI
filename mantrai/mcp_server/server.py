@@ -85,6 +85,7 @@ def mantrai_confirm(session_id: str, action_context: Optional[str] = None) -> st
 def mantrai_check(session_id: str) -> str:
     """Check compliance: time since last confirm, window status, action count."""
     gate = _get_gate()
+    result = gate.before_action("mcp_check", session_id)
     last = _get_tracker().last_confirmation(session_id)
     in_window = _get_tracker().compliance_window(session_id, gate.window_minutes)
     stats = _get_tracker().session_stats(session_id)
@@ -92,8 +93,8 @@ def mantrai_check(session_id: str) -> str:
     lines = [
         f"Session: {session_id}",
         f"Level: {gate.level}",
-        f"Actions since last injection: {gate.action_counter}",
-        f"Threshold: {gate.threshold}",
+        f"Actions since last injection: {result.action_count}",
+        f"Threshold: {result.threshold}",
         f"Compliance window: {'IN' if in_window else 'OUT'} ({gate.window_minutes} min)",
         f"Total confirmations: {stats['count']}",
     ]

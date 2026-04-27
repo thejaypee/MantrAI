@@ -329,12 +329,13 @@ def _edit_category(category: str, target_path: Path) -> None:
     defaults = get_default_mantra()
     default_principles = [p for p in defaults.principles if p.category == category]
 
-    # Load existing principles for this category so they aren't lost
+    # Load existing file to preserve metadata and non-default principles
+    existing_mantra = None
     existing_for_cat: list = []
     if target_path.exists():
         try:
-            existing = load_mantra(target_path)
-            existing_for_cat = [p for p in existing.principles if p.category == category]
+            existing_mantra = load_mantra(target_path)
+            existing_for_cat = [p for p in existing_mantra.principles if p.category == category]
         except Exception:
             pass
 
@@ -371,14 +372,10 @@ def _edit_category(category: str, target_path: Path) -> None:
 
     # Rebuild mantra preserving other categories exactly as they are
     all_principles: list = []
-    if target_path.exists():
-        try:
-            existing = load_mantra(target_path)
-            for p in existing.principles:
-                if p.category != category:
-                    all_principles.append(p)
-        except Exception:
-            pass
+    if existing_mantra is not None:
+        for p in existing_mantra.principles:
+            if p.category != category:
+                all_principles.append(p)
 
     for text in selected:
         all_principles.append(Principle(text=text, category=category))
@@ -390,9 +387,9 @@ def _edit_category(category: str, target_path: Path) -> None:
         sys.exit(1)
 
     new_mantra = Mantra(
-        level=defaults.level,
-        author=defaults.author,
-        token=defaults.token,
+        level=existing_mantra.level if existing_mantra else defaults.level,
+        author=existing_mantra.author if existing_mantra else defaults.author,
+        token=existing_mantra.token if existing_mantra else defaults.token,
         principles=all_principles,
     )
 
