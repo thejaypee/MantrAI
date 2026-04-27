@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import os
 from pathlib import Path
 from typing import Optional
@@ -53,7 +52,12 @@ def _get_gate(level: Optional[str] = None) -> ActionGate:
         )
     elif level is not None:
         _gate.level = level
-        _gate.threshold = 1 if level == "strict" else 5
+        cfg = load_config()
+        _gate.threshold = (
+            cfg.get("strict_threshold", 1)
+            if level == "strict"
+            else cfg.get("normal_threshold", 5)
+        )
     return _gate
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from string import Template
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -12,7 +13,7 @@ from mantrai.core.schema import Mantra, Principle
 
 app = FastAPI(title="MantrAI GUI")
 
-HTML_TEMPLATE = """
+HTML_TEMPLATE = Template("""
 <!DOCTYPE html>
 <html>
 <head>
@@ -87,8 +88,8 @@ HTML_TEMPLATE = """
     <div id="status" class="status"></div>
 
     <script>
-        const defaults = {defaults_json};
-        const existing = {existing_json};
+        const defaults = $defaults_json;
+        const existing = $existing_json;
         let principles = { global: [], project: [], folder: [] };
 
         function init() {
@@ -160,7 +161,7 @@ HTML_TEMPLATE = """
     </script>
 </body>
 </html>
-"""
+""")
 
 
 def _get_principles_by_category(mantra: Mantra) -> dict:
@@ -183,8 +184,10 @@ def index():
         existing = Mantra(level="strict", principles=[])
     existing_by_cat = _get_principles_by_category(existing)
 
-    html = HTML_TEMPLATE.replace("{defaults_json}", json.dumps(defaults_by_cat))
-    html = html.replace("{existing_json}", json.dumps(existing_by_cat))
+    html = HTML_TEMPLATE.substitute(
+        defaults_json=json.dumps(defaults_by_cat),
+        existing_json=json.dumps(existing_by_cat),
+    )
     return HTMLResponse(content=html)
 
 

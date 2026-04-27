@@ -56,13 +56,17 @@ test_case "CLI validate fails invalid" bash -c "
     rm \"\$TMPFILE\"
 "
 
-# Test 6: MCP server starts and responds
+# Test 6: MCP server starts and stays up
 test_case "MCP server starts" bash -c "
-    timeout 3 $VENV_PYTHON -m mantrai.mcp_server.server &
+    $VENV_PYTHON -m mantrai.mcp_server.server &
     PID=\$!
     sleep 1
-    kill \$PID 2>/dev/null || true
-    wait \$PID 2>/dev/null || true
+    if kill -0 \$PID 2>/dev/null; then
+        kill \$PID 2>/dev/null || true
+        wait \$PID 2>/dev/null || true
+    else
+        exit 1
+    fi
 "
 
 # Test 7: DB persists across CLI calls
@@ -80,9 +84,7 @@ test_case "Inject returns mantra block" bash -c "
 
 # Test 9: Set level changes threshold
 test_case "Set level changes behavior" bash -c "
-    $VENV_PYTHON -c '
-import sys
-sys.path.insert(0, \"$PROJECT_DIR\")
+    PYTHONPATH=\"$PROJECT_DIR\" $VENV_PYTHON -c '
 from mantrai.mcp_server.server import mantrai_set_level
 result = mantrai_set_level(\"bash-test-5\", \"strict\")
 assert \"strict\" in result
