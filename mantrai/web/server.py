@@ -199,13 +199,20 @@ def save(data: dict):
         if not all_principles:
             return {"success": False, "message": "At least one principle required."}
 
+        from mantrai.core.config import load_config
+        from mantrai.core.mantra import _find_project_root
+        cfg = load_config()
+        existing = load_mantra()
+
         new_mantra = Mantra(
-            level="strict",
-            author="thejaypee",
+            level=existing.level,
+            author=cfg.get("author") or existing.author,
+            token=existing.token,
             principles=all_principles,
         )
 
-        target = Path.cwd() / ".mantrai.md"
+        root = _find_project_root(Path.cwd()) or Path.cwd()
+        target = root / ".mantrai.md"
         target.write_text(new_mantra.to_markdown(), encoding="utf-8")
         return {"success": True, "message": f"Saved {len(all_principles)} principle(s) to {target}"}
     except Exception as e:

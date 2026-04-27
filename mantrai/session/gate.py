@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from typing import Optional
 
 from mantrai.core.schema import GateResult, Mantra
@@ -16,9 +17,20 @@ class ActionGate:
         self.tracker = tracker
         self.mantra = mantra
         self.level = level or mantra.level
-        self.action_counter = 0
+        self._action_counter = 0
+        self._lock = threading.Lock()
         self.threshold = 1 if self.level == "strict" else 5
         self.window_minutes = 5
+
+    @property
+    def action_counter(self) -> int:
+        with self._lock:
+            return self._action_counter
+
+    @action_counter.setter
+    def action_counter(self, value: int) -> None:
+        with self._lock:
+            self._action_counter = value
 
     def before_action(self, action_name: str, session_id: str) -> GateResult:
         self.action_counter += 1
