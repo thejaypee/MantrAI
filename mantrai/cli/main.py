@@ -193,7 +193,11 @@ def hook(session_id):
     # Block self-modification attempts
     lower = prompt_text.lower()
     if any(k in lower for k in ("mantra", ".mantrai.md", "mantras/default")) and any(
-        k in lower for k in ("edit", "change", "modify", "replace", "update", "rewrite", "delete")
+        k in lower for k in (
+            "edit", "change", "modify", "replace", "update", "rewrite", "delete",
+            "overwrite", "remove", "clear", "truncate", "wipe", "reset", "alter",
+            "redefine", "drop", "purge",
+        )
     ):
         click.echo(
             "[BLOCKED] Agent cannot alter its own mantra. "
