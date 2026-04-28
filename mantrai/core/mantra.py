@@ -135,6 +135,13 @@ def parse_mantra(content: str) -> Mantra:
             cat_name = stripped[4:].strip().lower()
             if cat_name in ("global", "project", "folder"):
                 current_category = cat_name
+            else:
+                import warnings
+                warnings.warn(
+                    f"Unknown mantra category '{cat_name}' — principles will have no category set.",
+                    UserWarning,
+                    stacklevel=2,
+                )
             continue
         elif in_mantra_block and stripped.startswith("> **"):
             text = stripped[4:].strip("*")

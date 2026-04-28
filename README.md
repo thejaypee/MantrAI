@@ -26,6 +26,7 @@ pip install -e .
 ```
 
 The `mantrai` binary is installed into your virtual environment:
+
 ```bash
 /home/sauly/mantrai/.venv/bin/mantrai --help
 
@@ -68,7 +69,7 @@ Each mantra is divided into three categories:
 ## MCP Tools
 
 | Tool | Purpose |
-|---|---|
+| --- | --- |
 | `mantrai_read` | Return current mantra with level and principles |
 | `mantrai_confirm` | Log acknowledgment for a session |
 | `mantrai_check` | Check compliance status |

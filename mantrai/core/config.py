@@ -24,11 +24,14 @@ def get_config_path() -> Path:
 def load_config() -> dict:
     path = get_config_path()
     if path.exists():
-        with open(path, "r", encoding="utf-8") as f:
-            loaded = json.load(f)
-        merged = dict(DEFAULT_CONFIG)
-        merged.update(loaded)
-        return merged
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+            merged = dict(DEFAULT_CONFIG)
+            merged.update(loaded)
+            return merged
+        except (json.JSONDecodeError, OSError):
+            return dict(DEFAULT_CONFIG)
     return dict(DEFAULT_CONFIG)
 
 

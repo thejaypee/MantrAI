@@ -45,7 +45,8 @@ class ActionGate:
         is_forced = action_name == "forced_injection"
 
         if not is_diagnostic:
-            self.action_counter += 1
+            with self._lock:
+                self._action_counter += 1
 
         last = self.tracker.last_confirmation(session_id)
         in_window = (

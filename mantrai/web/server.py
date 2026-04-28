@@ -184,7 +184,7 @@ def index():
         existing = Mantra(level="strict", principles=[])
     existing_by_cat = _get_principles_by_category(existing)
 
-    html = HTML_TEMPLATE.substitute(
+    html = HTML_TEMPLATE.safe_substitute(
         defaults_json=json.dumps(defaults_by_cat),
         existing_json=json.dumps(existing_by_cat),
     )

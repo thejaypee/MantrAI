@@ -50,7 +50,7 @@ def install_claude_code_hook(target_dir: Optional[Path] = None) -> tuple[bool, s
         except json.JSONDecodeError:
             return False, f"Could not parse {settings_file}"
 
-    config["user-prompt-submit-hook"] = "mantrai hook"
+    config.setdefault("user-prompt-submit-hook", "mantrai hook")
     settings_file.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
     return True, f"Installed Claude Code hook in {settings_file}"
 

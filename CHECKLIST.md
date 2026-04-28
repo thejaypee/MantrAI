@@ -38,7 +38,7 @@
 
 ## File Structure
 
-```
+```text
 ~/mantrai/
 ├── mantrai/
 │   ├── core/
